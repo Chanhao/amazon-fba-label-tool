@@ -109,9 +109,9 @@ const CODE128_PATTERNS = [
 ];
 
 const TEMPLATE = {
-  fnsku: "B0CQXBWP1Q",
-  title: "Vacking Replacement Part for L10s Ultra",
-  contents: "1 Main Brush, 4 Side Brushes, 4 Filters, 4 Mops, 2 Dust Bags.",
+  fnsku: "",
+  title: "",
+  contents: "",
   condition: "New",
   origin: "Made in China",
   quantity: 1,
@@ -462,6 +462,10 @@ function getBarcodeBars(value) {
 }
 
 function barcodeSvg(value) {
+  if (!normalizeBarcode(value)) {
+    return `<svg class="barcode-svg empty" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>`;
+  }
+
   try {
     const { bars, totalWidth } = getBarcodeBars(value);
     const rects = bars
@@ -622,7 +626,23 @@ function printPage(record) {
   return page;
 }
 
+function isBlankSingleDraft(records) {
+  return (
+    activeMode === "single" &&
+    records.length === 1 &&
+    !records[0].fnsku &&
+    !records[0].title &&
+    !records[0].contents
+  );
+}
+
+function hasRequiredFields(records) {
+  return records.length > 0 && records.every((record) => record.fnsku && record.title);
+}
+
 function validationFor(records) {
+  if (isBlankSingleDraft(records)) return "";
+
   if (!records.length) return "批量模式下至少需要一行数据。";
 
   const firstInvalid = records.find((record) => validateBarcode(record.fnsku));
@@ -646,8 +666,9 @@ function render() {
   const validation = validationFor(records);
 
   els.validationMessage.textContent = validation;
-  els.printButton.disabled = Boolean(validation) && !validation.includes("偏长");
-  els.downloadButton.disabled = Boolean(validation) && !validation.includes("偏长");
+  const canOutput = hasRequiredFields(records) && (!validation || validation.includes("偏长"));
+  els.printButton.disabled = !canOutput;
+  els.downloadButton.disabled = !canOutput;
 
   const previewRecord = records[0] || TEMPLATE;
   els.previewHolder.replaceChildren(labelElement(previewRecord));
