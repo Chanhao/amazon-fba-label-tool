@@ -1,0 +1,17 @@
+{
+  "name": "Amazon FBA 商品标签工具",
+  "short_name": "FBA 标签",
+  "description": "在线生成美国 Amazon FBA 商品标签，支持 FNSKU Code 128 条码、60 x 40 mm 打印、批量输入和 DLabel DDL 导出。",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f5",
+  "theme_color": "#176b5b",
+  "icons": [
+    {
+      "src": "./assets/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

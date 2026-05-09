@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Amazon FBA 商品标签工具</title>
+    <meta
+      name="description"
+      content="在线生成美国 Amazon FBA 商品标签，支持 FNSKU Code 128 条码、60 x 40 mm 打印、批量输入和 DLabel DDL 导出。"
+    />
+    <meta name="theme-color" content="#176b5b" />
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./assets/icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css?v=20260509-5" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="control-panel" aria-label="标签字段">
+        <div class="brand-row">
+          <div>
+            <h1>FBA 商品标签</h1>
+            <p>60 x 40 mm · Code 128 · DLabel DDL</p>
+          </div>
+          <span class="status-dot" aria-hidden="true"></span>
+        </div>
+
+        <div class="segmented" role="tablist" aria-label="输入模式">
+          <button class="segment active" type="button" data-mode="single" role="tab" aria-selected="true">
+            单个
+          </button>
+          <button class="segment" type="button" data-mode="batch" role="tab" aria-selected="false">
+            批量
+          </button>
+        </div>
+
+        <form class="form-grid" id="singleForm">
+          <label class="field">
+            <span>FNSKU / 条码</span>
+            <input id="fnsku" autocomplete="off" spellcheck="false" value="B0CQXBWP1Q" />
+          </label>
+
+          <label class="field">
+            <span>商品标题</span>
+            <input
+              id="titleText"
+              autocomplete="off"
+              spellcheck="false"
+              value="Vacking Replacement Part for L10s Ultra"
+            />
+          </label>
+
+          <label class="field">
+            <span>套装内容</span>
+            <input
+              id="contentsText"
+              autocomplete="off"
+              spellcheck="false"
+              value="1 Main Brush, 4 Side Brushes, 4 Filters, 4 Mops, 2 Dust Bags."
+            />
+          </label>
+
+          <div class="split-fields">
+            <label class="field">
+              <span>状态</span>
+              <input id="conditionText" autocomplete="off" spellcheck="false" value="New" />
+            </label>
+            <label class="field">
+              <span>产地</span>
+              <input id="originText" autocomplete="off" spellcheck="false" value="Made in China" />
+            </label>
+          </div>
+
+          <label class="field compact">
+            <span>打印份数</span>
+            <input id="quantity" type="number" min="1" max="500" value="1" />
+          </label>
+        </form>
+
+        <form class="form-grid hidden" id="batchForm">
+          <label class="field">
+            <span>批量数据</span>
+            <textarea
+              id="batchInput"
+              spellcheck="false"
+              placeholder="FNSKU<Tab>商品标题<Tab>套装内容"
+            ></textarea>
+          </label>
+          <div class="split-fields">
+            <label class="field">
+              <span>状态</span>
+              <input id="batchConditionText" autocomplete="off" spellcheck="false" value="New" />
+            </label>
+            <label class="field">
+              <span>产地</span>
+              <input id="batchOriginText" autocomplete="off" spellcheck="false" value="Made in China" />
+            </label>
+          </div>
+        </form>
+
+        <p class="validation" id="validationMessage" role="status" aria-live="polite"></p>
+
+        <div class="actions">
+          <button class="primary" id="printButton" type="button">打印标签</button>
+          <button id="downloadButton" type="button">导出 DDL</button>
+          <button id="resetButton" type="button">恢复模板</button>
+        </div>
+      </section>
+
+      <section class="preview-panel" aria-label="标签预览">
+        <div class="preview-header">
+          <div>
+            <h2>预览</h2>
+            <p id="previewMeta">1 张标签</p>
+          </div>
+          <span class="size-pill">60 x 40 mm</span>
+        </div>
+
+        <div class="preview-stage">
+          <div class="preview-holder" id="previewHolder"></div>
+        </div>
+      </section>
+    </main>
+
+    <section id="printArea" aria-hidden="true"></section>
+
+    <script src="./app.js?v=20260509-5"></script>
+  </body>
+</html>
