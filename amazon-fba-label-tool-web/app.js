@@ -791,7 +791,7 @@ async function previewPngBase64(record) {
     );
   });
   drawFittedText(ctx, record.condition, 9, 5, mm(6.1), mm(32.23 + verticalOffset), mm(15), "left", pxPerMm);
-  drawFittedText(ctx, record.origin, 9, 5, mm(30.5), mm(32.23 + verticalOffset), mm(23.28), "left", pxPerMm);
+  drawFittedText(ctx, record.origin, 9, 5, mm(31.7), mm(32.23 + verticalOffset), mm(23.28), "left", pxPerMm);
 
   return canvas.toDataURL("image/png").split(",")[1];
 }
@@ -861,7 +861,7 @@ ${productObjects}
           <text value="${condition}" promptname="" repeat="1" day="0" addorsub="0" currentdata="1" second="0" interval="1" memory="0" year="0" keyinput="0" datasource="0" dateformat="0" month="0" timeformat="0" hour="0" minute="0"/>
         </textlist>
       </drawobj>
-      <drawobj memory="0" ellipse="false" textlength="0" lock="false" fontsize="${originFont}" fontfamily="微软雅黑" stretch="100" zvalue="${originZ}" datasource="0" minute="0" w="23.283340" second="0" addorsub="0" timeformat="0" alignment="4" h="4.498040" rotate="0" fontbold="false" l="30.500000" fontunderline="false" blackground="false" startposition="0" repeat="1" hormirror="false" fontletterspacing="0" linespacing="0" hour="0" itemtype="5" currentdata="1" year="0" month="0" fontstrikeout="false" dateformat="0" interval="1" fontitalic="false" t="${formatNumber(29.98387 + verticalOffset)}" day="0">
+      <drawobj memory="0" ellipse="false" textlength="0" lock="false" fontsize="${originFont}" fontfamily="微软雅黑" stretch="100" zvalue="${originZ}" datasource="0" minute="0" w="23.283340" second="0" addorsub="0" timeformat="0" alignment="4" h="4.498040" rotate="0" fontbold="false" l="31.700000" fontunderline="false" blackground="false" startposition="0" repeat="1" hormirror="false" fontletterspacing="0" linespacing="0" hour="0" itemtype="5" currentdata="1" year="0" month="0" fontstrikeout="false" dateformat="0" interval="1" fontitalic="false" t="${formatNumber(29.98387 + verticalOffset)}" day="0">
         <textlist>
           <text value="${origin}" promptname="" repeat="1" day="0" addorsub="0" currentdata="1" second="0" interval="1" memory="0" year="0" keyinput="0" datasource="0" dateformat="0" month="0" timeformat="0" hour="0" minute="0"/>
         </textlist>
