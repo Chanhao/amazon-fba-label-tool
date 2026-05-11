@@ -12,7 +12,7 @@
     <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./assets/icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=20260509-6" />
+    <link rel="stylesheet" href="./styles.css?v=20260511-1" />
   </head>
   <body>
     <main class="app-shell">
@@ -71,10 +71,16 @@
             </label>
           </div>
 
-          <label class="field compact">
-            <span>打印份数</span>
-            <input id="quantity" type="number" min="1" max="500" value="1" />
-          </label>
+          <div class="split-fields">
+            <label class="field">
+              <span>打印份数</span>
+              <input id="quantity" type="number" min="1" max="500" value="1" />
+            </label>
+            <label class="field">
+              <span>整体下移 mm</span>
+              <input id="verticalOffset" type="number" min="-2" max="5" step="0.1" value="2.0" />
+            </label>
+          </div>
         </form>
 
         <form class="form-grid hidden" id="batchForm">
@@ -96,6 +102,10 @@
               <input id="batchOriginText" autocomplete="off" spellcheck="false" value="Made in China" />
             </label>
           </div>
+          <label class="field compact">
+            <span>整体下移 mm</span>
+            <input id="batchVerticalOffset" type="number" min="-2" max="5" step="0.1" value="2.0" />
+          </label>
         </form>
 
         <p class="validation" id="validationMessage" role="status" aria-live="polite"></p>
@@ -124,6 +134,6 @@
 
     <section id="printArea" aria-hidden="true"></section>
 
-    <script src="./app.js?v=20260509-6"></script>
+    <script src="./app.js?v=20260511-1"></script>
   </body>
 </html>

@@ -115,6 +115,7 @@ const TEMPLATE = {
   condition: "New",
   origin: "Made in China",
   quantity: 1,
+  verticalOffset: 2,
 };
 
 const els = {
@@ -126,9 +127,11 @@ const els = {
   conditionText: document.querySelector("#conditionText"),
   originText: document.querySelector("#originText"),
   quantity: document.querySelector("#quantity"),
+  verticalOffset: document.querySelector("#verticalOffset"),
   batchInput: document.querySelector("#batchInput"),
   batchConditionText: document.querySelector("#batchConditionText"),
   batchOriginText: document.querySelector("#batchOriginText"),
+  batchVerticalOffset: document.querySelector("#batchVerticalOffset"),
   validationMessage: document.querySelector("#validationMessage"),
   previewHolder: document.querySelector("#previewHolder"),
   previewMeta: document.querySelector("#previewMeta"),
@@ -191,6 +194,12 @@ function clampQuantity(value) {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed)) return 1;
   return Math.min(500, Math.max(1, parsed));
+}
+
+function clampVerticalOffset(value) {
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) return TEMPLATE.verticalOffset;
+  return Math.min(5, Math.max(-2, parsed));
 }
 
 function getMeasureContext() {
@@ -494,6 +503,7 @@ function makeRecordFromSingle() {
     condition: els.conditionText.value.trim() || "New",
     origin: els.originText.value.trim() || "Made in China",
     quantity: clampQuantity(els.quantity.value),
+    verticalOffset: clampVerticalOffset(els.verticalOffset.value),
   };
 }
 
@@ -530,6 +540,7 @@ function parseCsvLine(line) {
 function makeRecordsFromBatch() {
   const condition = els.batchConditionText.value.trim() || "New";
   const origin = els.batchOriginText.value.trim() || "Made in China";
+  const verticalOffset = clampVerticalOffset(els.batchVerticalOffset.value);
   const lines = els.batchInput.value
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -548,6 +559,7 @@ function makeRecordsFromBatch() {
       condition,
       origin,
       quantity: clampQuantity(parts[3] || 1),
+      verticalOffset,
     }));
 }
 
@@ -589,6 +601,7 @@ function productSvgElement(productLayout) {
 
 function labelElement(record) {
   const productLayout = layoutProductText(record);
+  const verticalOffset = clampVerticalOffset(record.verticalOffset);
   const label = document.createElement("article");
   label.className = "fba-label";
   label.innerHTML = `
@@ -610,11 +623,14 @@ function labelElement(record) {
   condition.textContent = record.condition;
   origin.textContent = record.origin;
 
+  label.querySelector(".barcode-zone").style.top = `${2.35 + verticalOffset}mm`;
   code.style.fontSize = `${fitPt(record.fnsku, 6, 4.2, 54.43)}pt`;
-  product.style.top = `${productLayout.topMm}mm`;
+  product.style.top = `${productLayout.topMm + verticalOffset}mm`;
   product.replaceChildren(productSvgElement(productLayout));
   condition.style.fontSize = `${fitPt(record.condition, 9, 5, 15)}pt`;
+  condition.style.top = `${29.98387 + verticalOffset}mm`;
   origin.style.fontSize = `${fitPt(record.origin, 9, 5, 23.28)}pt`;
+  origin.style.top = `${29.98387 + verticalOffset}mm`;
 
   return label;
 }
@@ -697,9 +713,11 @@ function resetTemplate() {
   els.conditionText.value = TEMPLATE.condition;
   els.originText.value = TEMPLATE.origin;
   els.quantity.value = TEMPLATE.quantity;
+  els.verticalOffset.value = TEMPLATE.verticalOffset.toFixed(1);
   els.batchInput.value = "";
   els.batchConditionText.value = TEMPLATE.condition;
   els.batchOriginText.value = TEMPLATE.origin;
+  els.batchVerticalOffset.value = TEMPLATE.verticalOffset.toFixed(1);
   setMode("single");
 }
 
@@ -746,6 +764,7 @@ function drawTextLine(ctx, text, fontPt, x, y, width, align, pxPerMm) {
 }
 
 async function previewPngBase64(record) {
+  const verticalOffset = clampVerticalOffset(record.verticalOffset);
   const canvas = document.createElement("canvas");
   canvas.width = 1000;
   canvas.height = 666;
@@ -756,8 +775,8 @@ async function previewPngBase64(record) {
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  drawBarcodeCanvas(ctx, record.fnsku, mm(2.82), mm(2.35), mm(54.43), mm(12.2));
-  drawFittedText(ctx, record.fnsku, 6, 4.2, mm(2.82), mm(16.95), mm(54.43), "center", pxPerMm);
+  drawBarcodeCanvas(ctx, record.fnsku, mm(2.82), mm(2.35 + verticalOffset), mm(54.43), mm(12.2));
+  drawFittedText(ctx, record.fnsku, 6, 4.2, mm(2.82), mm(16.95 + verticalOffset), mm(54.43), "center", pxPerMm);
   const productLayout = layoutProductText(record);
   productLayout.lines.forEach((line) => {
     drawTextLine(
@@ -765,14 +784,14 @@ async function previewPngBase64(record) {
       line.text,
       line.fontPt,
       mm(PRODUCT_TEXT_LEFT_MM),
-      mm(line.topMm + line.lineHeightMm / 2),
+      mm(line.topMm + verticalOffset + line.lineHeightMm / 2),
       mm(PRODUCT_TEXT_WIDTH_MM),
       "center",
       pxPerMm
     );
   });
-  drawFittedText(ctx, record.condition, 9, 5, mm(2.82), mm(32.23), mm(15), "left", pxPerMm);
-  drawFittedText(ctx, record.origin, 9, 5, mm(33.97), mm(32.23), mm(23.28), "left", pxPerMm);
+  drawFittedText(ctx, record.condition, 9, 5, mm(6.1), mm(32.23 + verticalOffset), mm(15), "left", pxPerMm);
+  drawFittedText(ctx, record.origin, 9, 5, mm(30.5), mm(32.23 + verticalOffset), mm(23.28), "left", pxPerMm);
 
   return canvas.toDataURL("image/png").split(",")[1];
 }
@@ -806,6 +825,7 @@ function ddlXml(record, previewImage) {
   const fnsku = xmlEscape(record.fnsku);
   const condition = xmlEscape(record.condition);
   const origin = xmlEscape(record.origin);
+  const verticalOffset = clampVerticalOffset(record.verticalOffset);
   const productLayout = layoutProductText(record);
   const productObjects = productLayout.lines
     .map((line, index) =>
@@ -814,7 +834,7 @@ function ddlXml(record, previewImage) {
         value: line.text,
         fontSize: line.fontPt,
         l: PRODUCT_TEXT_LEFT_MM,
-        t: line.topMm,
+        t: line.topMm + verticalOffset,
         w: PRODUCT_TEXT_WIDTH_MM,
         h: line.lineHeightMm,
         alignment: 1,
@@ -830,18 +850,18 @@ function ddlXml(record, previewImage) {
 <DLabel previewimage="${previewImage}" version="3.2.3" source="pc">
   <paper excelurl="" veroffset="0" datasource="" w="60" h="40" rotate="0" excelhash="" horoffset="0" excelpath="" colspacing="2" zoomfactor="3.7252902984619141" colcount="1" bgcolor="" bgurl="" moreselect="true" background="" databasefile="" excelid="" shapeindex="1">
     <labelobjects>
-      <drawobj characterset="0" zvalue="1" addbarcode="false" addorsub="0" hidelanding="false" checkcode="1" textposition="0" fontfamily="微软雅黑" rotate="0" repeat="1" fontbold="false" w="54.434460" currentdata="1" day="0" datasource="0" month="0" thickness="5" subtype="" lock="false" hour="0" barcodetype="CODE_128" textoffset="1.00" addtype="0" quietzone="10" alignment="1" density="0.37541" year="0" timeformat="0" fontsize="6" h="17.200000" t="2.350000" maskcontent="" minute="0" second="0" fontunderline="false" ucc="false" interval="1" fontitalic="false" l="2.820890" itemtype="7" bearerbar="1" maskcharacter="" dateformat="0" fontstrikeout="false" memory="0">
+      <drawobj characterset="0" zvalue="1" addbarcode="false" addorsub="0" hidelanding="false" checkcode="1" textposition="0" fontfamily="微软雅黑" rotate="0" repeat="1" fontbold="false" w="54.434460" currentdata="1" day="0" datasource="0" month="0" thickness="5" subtype="" lock="false" hour="0" barcodetype="CODE_128" textoffset="1.00" addtype="0" quietzone="10" alignment="1" density="0.37541" year="0" timeformat="0" fontsize="6" h="17.200000" t="${formatNumber(2.35 + verticalOffset)}" maskcontent="" minute="0" second="0" fontunderline="false" ucc="false" interval="1" fontitalic="false" l="2.820890" itemtype="7" bearerbar="1" maskcharacter="" dateformat="0" fontstrikeout="false" memory="0">
         <textlist>
           <text value="${fnsku}" promptname="" repeat="1" day="0" addorsub="0" currentdata="1" second="0" interval="1" memory="0" year="0" keyinput="0" datasource="0" dateformat="0" month="0" timeformat="0" hour="0" minute="0"/>
         </textlist>
       </drawobj>
 ${productObjects}
-      <drawobj memory="0" ellipse="false" textlength="0" lock="false" fontsize="${conditionFont}" fontfamily="微软雅黑" stretch="100" zvalue="${conditionZ}" datasource="0" minute="0" w="15.000000" second="0" addorsub="0" timeformat="0" alignment="4" h="4.498040" rotate="0" fontbold="false" l="2.820900" fontunderline="false" blackground="false" startposition="0" repeat="1" hormirror="false" fontletterspacing="0" linespacing="0" hour="0" itemtype="5" currentdata="1" year="0" month="0" fontstrikeout="false" dateformat="0" interval="1" fontitalic="false" t="29.983870" day="0">
+      <drawobj memory="0" ellipse="false" textlength="0" lock="false" fontsize="${conditionFont}" fontfamily="微软雅黑" stretch="100" zvalue="${conditionZ}" datasource="0" minute="0" w="15.000000" second="0" addorsub="0" timeformat="0" alignment="4" h="4.498040" rotate="0" fontbold="false" l="6.100000" fontunderline="false" blackground="false" startposition="0" repeat="1" hormirror="false" fontletterspacing="0" linespacing="0" hour="0" itemtype="5" currentdata="1" year="0" month="0" fontstrikeout="false" dateformat="0" interval="1" fontitalic="false" t="${formatNumber(29.98387 + verticalOffset)}" day="0">
         <textlist>
           <text value="${condition}" promptname="" repeat="1" day="0" addorsub="0" currentdata="1" second="0" interval="1" memory="0" year="0" keyinput="0" datasource="0" dateformat="0" month="0" timeformat="0" hour="0" minute="0"/>
         </textlist>
       </drawobj>
-      <drawobj memory="0" ellipse="false" textlength="0" lock="false" fontsize="${originFont}" fontfamily="微软雅黑" stretch="100" zvalue="${originZ}" datasource="0" minute="0" w="23.283340" second="0" addorsub="0" timeformat="0" alignment="4" h="4.498040" rotate="0" fontbold="false" l="33.972020" fontunderline="false" blackground="false" startposition="0" repeat="1" hormirror="false" fontletterspacing="0" linespacing="0" hour="0" itemtype="5" currentdata="1" year="0" month="0" fontstrikeout="false" dateformat="0" interval="1" fontitalic="false" t="29.983870" day="0">
+      <drawobj memory="0" ellipse="false" textlength="0" lock="false" fontsize="${originFont}" fontfamily="微软雅黑" stretch="100" zvalue="${originZ}" datasource="0" minute="0" w="23.283340" second="0" addorsub="0" timeformat="0" alignment="4" h="4.498040" rotate="0" fontbold="false" l="30.500000" fontunderline="false" blackground="false" startposition="0" repeat="1" hormirror="false" fontletterspacing="0" linespacing="0" hour="0" itemtype="5" currentdata="1" year="0" month="0" fontstrikeout="false" dateformat="0" interval="1" fontitalic="false" t="${formatNumber(29.98387 + verticalOffset)}" day="0">
         <textlist>
           <text value="${origin}" promptname="" repeat="1" day="0" addorsub="0" currentdata="1" second="0" interval="1" memory="0" year="0" keyinput="0" datasource="0" dateformat="0" month="0" timeformat="0" hour="0" minute="0"/>
         </textlist>
@@ -912,6 +932,14 @@ function applyUrlDefaults() {
   if (params.has("condition")) els.conditionText.value = params.get("condition");
   if (params.has("origin")) els.originText.value = params.get("origin");
   if (params.has("quantity")) els.quantity.value = params.get("quantity");
+  if (params.has("verticalOffset")) {
+    els.verticalOffset.value = params.get("verticalOffset");
+    els.batchVerticalOffset.value = params.get("verticalOffset");
+  }
+  if (params.has("offset")) {
+    els.verticalOffset.value = params.get("offset");
+    els.batchVerticalOffset.value = params.get("offset");
+  }
 }
 
 applyUrlDefaults();
