@@ -149,33 +149,41 @@ const PRODUCT_TEXT_LAYOUTS = [
   {
     titleMaxLines: 1,
     contentsMaxLines: 1,
-    titleBasePt: 3.7,
-    titleMinPt: 3.7,
-    contentsBasePt: 3.7,
-    contentsMinPt: 3.7,
+    titleBasePt: 6,
+    titleMinPt: 6,
+    contentsBasePt: 6,
+    contentsMinPt: 6,
   },
   {
-    titleMaxLines: 1,
-    contentsMaxLines: 2,
-    titleBasePt: 3.7,
-    titleMinPt: 3.7,
-    contentsBasePt: 3.7,
-    contentsMinPt: 3.7,
-  },
-  {
-    titleMaxLines: 1,
-    contentsMaxLines: 3,
-    titleBasePt: 3.7,
-    titleMinPt: 3.7,
-    contentsBasePt: 3.7,
-    contentsMinPt: 3.7,
+    titleMaxLines: 2,
+    contentsMaxLines: 1,
+    titleBasePt: 6,
+    titleMinPt: 6,
+    contentsBasePt: 6,
+    contentsMinPt: 6,
   },
   {
     titleMaxLines: 2,
     contentsMaxLines: 2,
-    titleBasePt: 3.2,
+    titleBasePt: 6,
+    titleMinPt: 6,
+    contentsBasePt: 6,
+    contentsMinPt: 6,
+  },
+  {
+    titleMaxLines: 2,
+    contentsMaxLines: 3,
+    titleBasePt: 6,
+    titleMinPt: 2.8,
+    contentsBasePt: 6,
+    contentsMinPt: 2.8,
+  },
+  {
+    titleMaxLines: 3,
+    contentsMaxLines: 3,
+    titleBasePt: 4.2,
     titleMinPt: 2.05,
-    contentsBasePt: 3.05,
+    contentsBasePt: 4.2,
     contentsMinPt: 2.05,
   },
 ];
@@ -184,6 +192,7 @@ const PRODUCT_TEXT_LEFT_MM = 1.5;
 const PRODUCT_TEXT_TOP_MM = 20.15;
 const PRODUCT_TEXT_WIDTH_MM = 57;
 const PRODUCT_TEXT_HEIGHT_MM = 8.65;
+const EXPANDED_PRODUCT_TEXT_HEIGHT_MM = 15;
 const TEXT_MEASURE_SAFETY = 0.92;
 
 function normalizeBarcode(value) {
@@ -320,7 +329,11 @@ function lineHeightForFont(fontPt) {
   return Math.max(1.62, Number((fontPt * 0.57).toFixed(2)));
 }
 
-function buildProductLines(titleWrapped, contentsWrapped, fontPt) {
+function productTextHeightForRecord(record) {
+  return record.condition || record.origin ? PRODUCT_TEXT_HEIGHT_MM : EXPANDED_PRODUCT_TEXT_HEIGHT_MM;
+}
+
+function buildProductLines(titleWrapped, contentsWrapped, fontPt, heightMm) {
   const lineHeightMm = lineHeightForFont(fontPt);
   const plannedLines = [
     ...titleWrapped.lines.map((line) => ({
@@ -337,7 +350,7 @@ function buildProductLines(titleWrapped, contentsWrapped, fontPt) {
     })),
   ];
   const totalHeightMm = plannedLines.length * lineHeightMm;
-  let cursorMm = PRODUCT_TEXT_TOP_MM + Math.max(0, (PRODUCT_TEXT_HEIGHT_MM - totalHeightMm) / 2);
+  let cursorMm = PRODUCT_TEXT_TOP_MM + Math.max(0, (heightMm - totalHeightMm) / 2);
   const lines = [];
 
   for (const line of plannedLines) {
@@ -345,12 +358,12 @@ function buildProductLines(titleWrapped, contentsWrapped, fontPt) {
     cursorMm += line.lineHeightMm;
   }
 
-  return { lines, topMm: PRODUCT_TEXT_TOP_MM };
+  return { lines, topMm: PRODUCT_TEXT_TOP_MM, heightMm };
 }
 
-function fitProductTextLayout(title, contents, option, widthMm) {
-  const basePt = Math.min(option.titleBasePt, option.contentsBasePt);
-  const minPt = Math.min(option.titleMinPt, option.contentsMinPt);
+function fitProductTextLayout(title, contents, option, widthMm, heightMm) {
+  const basePt = option.titleBasePt;
+  const minPt = option.titleMinPt;
 
   for (let size = basePt; size >= minPt; size -= 0.1) {
     const fontPt = Number(size.toFixed(1));
@@ -360,9 +373,9 @@ function fitProductTextLayout(title, contents, option, widthMm) {
     const totalLines = titleWrapped.lines.length + contentsWrapped.lines.length;
     const totalHeightMm = totalLines * lineHeightMm;
 
-    if (!titleWrapped.overflow && !contentsWrapped.overflow && totalHeightMm <= PRODUCT_TEXT_HEIGHT_MM) {
+    if (!titleWrapped.overflow && !contentsWrapped.overflow && totalHeightMm <= heightMm) {
       return {
-        ...buildProductLines(titleWrapped, contentsWrapped, fontPt),
+        ...buildProductLines(titleWrapped, contentsWrapped, fontPt, heightMm),
         overflow: false,
       };
     }
@@ -372,23 +385,24 @@ function fitProductTextLayout(title, contents, option, widthMm) {
   const titleWrapped = wrapTextLines(title, fontPt, widthMm, option.titleMaxLines, 0.98);
   const contentsWrapped = wrapTextLines(contents, fontPt, widthMm, option.contentsMaxLines, 0.94);
   return {
-    ...buildProductLines(titleWrapped, contentsWrapped, fontPt),
+    ...buildProductLines(titleWrapped, contentsWrapped, fontPt, heightMm),
     overflow: titleWrapped.overflow || contentsWrapped.overflow,
   };
 }
 
 function layoutProductText(record) {
   const widthMm = PRODUCT_TEXT_WIDTH_MM;
+  const heightMm = productTextHeightForRecord(record);
   const title = String(record.title || "").trim();
   const contents = String(record.contents || "").trim();
 
   for (const option of PRODUCT_TEXT_LAYOUTS) {
-    const layout = fitProductTextLayout(title, contents, option, widthMm);
+    const layout = fitProductTextLayout(title, contents, option, widthMm, heightMm);
     if (!layout.overflow) return layout;
   }
 
   const fallback = PRODUCT_TEXT_LAYOUTS[PRODUCT_TEXT_LAYOUTS.length - 1];
-  return fitProductTextLayout(title, contents, fallback, widthMm);
+  return fitProductTextLayout(title, contents, fallback, widthMm, heightMm);
 }
 
 function validateBarcode(value) {
@@ -546,7 +560,7 @@ function productSvgElement(productLayout) {
   const svgNs = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNs, "svg");
   svg.setAttribute("class", "product-svg");
-  svg.setAttribute("viewBox", `0 0 ${PRODUCT_TEXT_WIDTH_MM} ${PRODUCT_TEXT_HEIGHT_MM}`);
+  svg.setAttribute("viewBox", `0 0 ${PRODUCT_TEXT_WIDTH_MM} ${productLayout.heightMm}`);
   svg.setAttribute("aria-hidden", "true");
 
   for (const line of productLayout.lines) {
@@ -595,6 +609,7 @@ function labelElement(record) {
   label.querySelector(".barcode-zone").style.top = `${2.35 + verticalOffset}mm`;
   code.style.fontSize = `${fitPt(record.fnsku, 6, 4.2, 54.43)}pt`;
   product.style.top = `${productLayout.topMm + verticalOffset}mm`;
+  product.style.height = `${productLayout.heightMm}mm`;
   product.replaceChildren(productSvgElement(productLayout));
   condition.style.fontSize = `${fitPt(record.condition, 9, 5, 15)}pt`;
   condition.style.top = `${29.98387 + verticalOffset}mm`;
