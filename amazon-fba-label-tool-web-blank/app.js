@@ -150,25 +150,25 @@ const PRODUCT_TEXT_LAYOUTS = [
     titleMaxLines: 1,
     contentsMaxLines: 1,
     titleBasePt: 3.7,
-    titleMinPt: 2.3,
-    contentsBasePt: 3.9,
-    contentsMinPt: 2.4,
+    titleMinPt: 3.7,
+    contentsBasePt: 3.7,
+    contentsMinPt: 3.7,
   },
   {
     titleMaxLines: 1,
     contentsMaxLines: 2,
-    titleBasePt: 3.5,
-    titleMinPt: 2.2,
-    contentsBasePt: 3.5,
-    contentsMinPt: 2.25,
+    titleBasePt: 3.7,
+    titleMinPt: 3.7,
+    contentsBasePt: 3.7,
+    contentsMinPt: 3.7,
   },
   {
     titleMaxLines: 1,
     contentsMaxLines: 3,
-    titleBasePt: 3.25,
-    titleMinPt: 2.1,
-    contentsBasePt: 3.15,
-    contentsMinPt: 2.05,
+    titleBasePt: 3.7,
+    titleMinPt: 3.7,
+    contentsBasePt: 3.7,
+    contentsMinPt: 3.7,
   },
   {
     titleMaxLines: 2,
@@ -320,106 +320,75 @@ function lineHeightForFont(fontPt) {
   return Math.max(1.62, Number((fontPt * 0.57).toFixed(2)));
 }
 
+function buildProductLines(titleWrapped, contentsWrapped, fontPt) {
+  const lineHeightMm = lineHeightForFont(fontPt);
+  const plannedLines = [
+    ...titleWrapped.lines.map((line) => ({
+      text: line,
+      role: "title",
+      fontPt,
+      lineHeightMm,
+    })),
+    ...contentsWrapped.lines.map((line) => ({
+      text: line,
+      role: "contents",
+      fontPt,
+      lineHeightMm,
+    })),
+  ];
+  const totalHeightMm = plannedLines.length * lineHeightMm;
+  let cursorMm = PRODUCT_TEXT_TOP_MM + Math.max(0, (PRODUCT_TEXT_HEIGHT_MM - totalHeightMm) / 2);
+  const lines = [];
+
+  for (const line of plannedLines) {
+    lines.push({ ...line, topMm: cursorMm });
+    cursorMm += line.lineHeightMm;
+  }
+
+  return { lines, topMm: PRODUCT_TEXT_TOP_MM };
+}
+
+function fitProductTextLayout(title, contents, option, widthMm) {
+  const basePt = Math.min(option.titleBasePt, option.contentsBasePt);
+  const minPt = Math.min(option.titleMinPt, option.contentsMinPt);
+
+  for (let size = basePt; size >= minPt; size -= 0.1) {
+    const fontPt = Number(size.toFixed(1));
+    const titleWrapped = wrapTextLines(title, fontPt, widthMm, option.titleMaxLines, 0.98);
+    const contentsWrapped = wrapTextLines(contents, fontPt, widthMm, option.contentsMaxLines, 0.94);
+    const lineHeightMm = lineHeightForFont(fontPt);
+    const totalLines = titleWrapped.lines.length + contentsWrapped.lines.length;
+    const totalHeightMm = totalLines * lineHeightMm;
+
+    if (!titleWrapped.overflow && !contentsWrapped.overflow && totalHeightMm <= PRODUCT_TEXT_HEIGHT_MM) {
+      return {
+        ...buildProductLines(titleWrapped, contentsWrapped, fontPt),
+        overflow: false,
+      };
+    }
+  }
+
+  const fontPt = minPt;
+  const titleWrapped = wrapTextLines(title, fontPt, widthMm, option.titleMaxLines, 0.98);
+  const contentsWrapped = wrapTextLines(contents, fontPt, widthMm, option.contentsMaxLines, 0.94);
+  return {
+    ...buildProductLines(titleWrapped, contentsWrapped, fontPt),
+    overflow: titleWrapped.overflow || contentsWrapped.overflow,
+  };
+}
+
 function layoutProductText(record) {
   const widthMm = PRODUCT_TEXT_WIDTH_MM;
   const title = String(record.title || "").trim();
   const contents = String(record.contents || "").trim();
 
   for (const option of PRODUCT_TEXT_LAYOUTS) {
-    const titleLayout = fitWrappedText(
-      title,
-      option.titleBasePt,
-      option.titleMinPt,
-      widthMm,
-      option.titleMaxLines,
-      0.98
-    );
-    const contentsLayout = fitWrappedText(
-      contents,
-      option.contentsBasePt,
-      option.contentsMinPt,
-      widthMm,
-      option.contentsMaxLines,
-      0.94
-    );
-
-    if (titleLayout.overflow || contentsLayout.overflow) continue;
-
-    const plannedLines = [
-      ...titleLayout.lines.map((line) => ({
-        text: line,
-        role: "title",
-        fontPt: titleLayout.fontPt,
-        lineHeightMm: lineHeightForFont(titleLayout.fontPt),
-      })),
-      ...contentsLayout.lines.map((line) => ({
-        text: line,
-        role: "contents",
-        fontPt: contentsLayout.fontPt,
-        lineHeightMm: lineHeightForFont(contentsLayout.fontPt),
-      })),
-    ];
-    const totalHeightMm = plannedLines.reduce((total, line) => total + line.lineHeightMm, 0);
-    if (totalHeightMm > PRODUCT_TEXT_HEIGHT_MM) continue;
-
-    let cursorMm = PRODUCT_TEXT_TOP_MM + Math.max(0, (PRODUCT_TEXT_HEIGHT_MM - totalHeightMm) / 2);
-    const lines = [];
-    for (const line of plannedLines) {
-      lines.push({ ...line, topMm: cursorMm });
-      cursorMm += line.lineHeightMm;
-    }
-
-    return {
-      lines,
-      topMm: PRODUCT_TEXT_TOP_MM,
-      overflow: false,
-    };
+    const layout = fitProductTextLayout(title, contents, option, widthMm);
+    if (!layout.overflow) return layout;
   }
 
   const fallback = PRODUCT_TEXT_LAYOUTS[PRODUCT_TEXT_LAYOUTS.length - 1];
-  const titleLayout = fitWrappedText(
-    title,
-    fallback.titleBasePt,
-    fallback.titleMinPt,
-    widthMm,
-    fallback.titleMaxLines,
-    0.98
-  );
-  const contentsLayout = fitWrappedText(
-    contents,
-    fallback.contentsBasePt,
-    fallback.contentsMinPt,
-    widthMm,
-    fallback.contentsMaxLines,
-    0.94
-  );
-  const plannedLines = [
-    ...titleLayout.lines.map((line) => ({
-      text: line,
-      role: "title",
-      fontPt: titleLayout.fontPt,
-      lineHeightMm: lineHeightForFont(titleLayout.fontPt),
-    })),
-    ...contentsLayout.lines.map((line) => ({
-      text: line,
-      role: "contents",
-      fontPt: contentsLayout.fontPt,
-      lineHeightMm: lineHeightForFont(contentsLayout.fontPt),
-    })),
-  ];
-  const totalHeightMm = plannedLines.reduce((total, line) => total + line.lineHeightMm, 0);
-  let cursorMm = PRODUCT_TEXT_TOP_MM + Math.max(0, (PRODUCT_TEXT_HEIGHT_MM - totalHeightMm) / 2);
-  const lines = [];
-  for (const line of plannedLines) {
-    lines.push({ ...line, topMm: cursorMm });
-    cursorMm += line.lineHeightMm;
-  }
-
-  return {
-    lines,
-    topMm: PRODUCT_TEXT_TOP_MM,
-    overflow: titleLayout.overflow || contentsLayout.overflow,
-  };
+  return fitProductTextLayout(title, contents, fallback, widthMm);
 }
 
 function validateBarcode(value) {
