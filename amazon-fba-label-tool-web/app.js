@@ -185,6 +185,7 @@ const PRODUCT_TEXT_TOP_MM = 20.15;
 const PRODUCT_TEXT_WIDTH_MM = 57;
 const PRODUCT_TEXT_HEIGHT_MM = 8.65;
 const TEXT_MEASURE_SAFETY = 0.92;
+const PRODUCT_TEXT_WEIGHT = "700";
 
 function normalizeBarcode(value) {
   return String(value || "").trim().toUpperCase();
@@ -237,13 +238,13 @@ function measureTextWidth(text, fontPt, weight = "400") {
   return ctx.measureText(String(text || "")).width;
 }
 
-function splitLongWord(word, fontPt, maxWidthPx) {
+function splitLongWord(word, fontPt, maxWidthPx, weight = "400") {
   const chunks = [];
   let current = "";
 
   for (const char of word) {
     const next = `${current}${char}`;
-    if (current && measureTextWidth(next, fontPt) > maxWidthPx) {
+    if (current && measureTextWidth(next, fontPt, weight) > maxWidthPx) {
       chunks.push(current);
       current = char;
     } else {
@@ -255,7 +256,14 @@ function splitLongWord(word, fontPt, maxWidthPx) {
   return chunks;
 }
 
-function wrapTextLines(text, fontPt, widthMm, maxLines, safety = TEXT_MEASURE_SAFETY) {
+function wrapTextLines(
+  text,
+  fontPt,
+  widthMm,
+  maxLines,
+  safety = TEXT_MEASURE_SAFETY,
+  weight = "400"
+) {
   const maxWidthPx = mmToCssPx(widthMm) * safety;
   const words = String(text || "")
     .trim()
@@ -277,7 +285,7 @@ function wrapTextLines(text, fontPt, widthMm, maxLines, safety = TEXT_MEASURE_SA
 
   for (const word of words) {
     const candidate = current ? `${current} ${word}` : word;
-    if (measureTextWidth(candidate, fontPt) <= maxWidthPx) {
+    if (measureTextWidth(candidate, fontPt, weight) <= maxWidthPx) {
       current = candidate;
       continue;
     }
@@ -287,12 +295,12 @@ function wrapTextLines(text, fontPt, widthMm, maxLines, safety = TEXT_MEASURE_SA
       current = "";
     }
 
-    if (measureTextWidth(word, fontPt) <= maxWidthPx) {
+    if (measureTextWidth(word, fontPt, weight) <= maxWidthPx) {
       current = word;
       continue;
     }
 
-    const chunks = splitLongWord(word, fontPt, maxWidthPx);
+    const chunks = splitLongWord(word, fontPt, maxWidthPx, weight);
     for (const chunk of chunks) {
       if (!pushLine(chunk)) break;
     }
@@ -303,17 +311,25 @@ function wrapTextLines(text, fontPt, widthMm, maxLines, safety = TEXT_MEASURE_SA
   return { lines, overflow };
 }
 
-function fitWrappedText(text, basePt, minPt, widthMm, maxLines, safety = TEXT_MEASURE_SAFETY) {
+function fitWrappedText(
+  text,
+  basePt,
+  minPt,
+  widthMm,
+  maxLines,
+  safety = TEXT_MEASURE_SAFETY,
+  weight = "400"
+) {
   for (let size = basePt; size >= minPt; size -= 0.1) {
     const fontPt = Number(size.toFixed(1));
-    const wrapped = wrapTextLines(text, fontPt, widthMm, maxLines, safety);
+    const wrapped = wrapTextLines(text, fontPt, widthMm, maxLines, safety, weight);
     if (!wrapped.overflow) {
       return { ...wrapped, fontPt };
     }
   }
 
   const fontPt = minPt;
-  return { ...wrapTextLines(text, fontPt, widthMm, maxLines, safety), fontPt };
+  return { ...wrapTextLines(text, fontPt, widthMm, maxLines, safety, weight), fontPt };
 }
 
 function lineHeightForFont(fontPt) {
@@ -332,7 +348,8 @@ function layoutProductText(record) {
       option.titleMinPt,
       widthMm,
       option.titleMaxLines,
-      0.98
+      0.98,
+      PRODUCT_TEXT_WEIGHT
     );
     const contentsLayout = fitWrappedText(
       contents,
@@ -340,7 +357,8 @@ function layoutProductText(record) {
       option.contentsMinPt,
       widthMm,
       option.contentsMaxLines,
-      0.94
+      0.94,
+      PRODUCT_TEXT_WEIGHT
     );
 
     if (titleLayout.overflow || contentsLayout.overflow) continue;
@@ -383,7 +401,8 @@ function layoutProductText(record) {
     fallback.titleMinPt,
     widthMm,
     fallback.titleMaxLines,
-    0.98
+    0.98,
+    PRODUCT_TEXT_WEIGHT
   );
   const contentsLayout = fitWrappedText(
     contents,
@@ -391,7 +410,8 @@ function layoutProductText(record) {
     fallback.contentsMinPt,
     widthMm,
     fallback.contentsMaxLines,
-    0.94
+    0.94,
+    PRODUCT_TEXT_WEIGHT
   );
   const plannedLines = [
     ...titleLayout.lines.map((line) => ({
@@ -591,6 +611,7 @@ function productSvgElement(productLayout) {
     text.setAttribute("text-anchor", "middle");
     text.setAttribute("dominant-baseline", "middle");
     text.setAttribute("font-family", "Arial, Helvetica, sans-serif");
+    text.setAttribute("font-weight", PRODUCT_TEXT_WEIGHT);
     text.setAttribute("font-size", String(Number((line.fontPt * 0.3527777778).toFixed(2))));
     text.textContent = line.text;
     svg.append(text);
@@ -756,7 +777,7 @@ function drawFittedText(ctx, text, basePt, minPt, x, y, width, align, pxPerMm) {
 
 function drawTextLine(ctx, text, fontPt, x, y, width, align, pxPerMm) {
   ctx.fillStyle = "#000000";
-  ctx.font = `${ptToCanvasPx(fontPt, pxPerMm)}px Arial, Helvetica, sans-serif`;
+  ctx.font = `${PRODUCT_TEXT_WEIGHT} ${ptToCanvasPx(fontPt, pxPerMm)}px Arial, Helvetica, sans-serif`;
   ctx.textAlign = align;
   ctx.textBaseline = "middle";
   const drawX = align === "left" ? x : x + width / 2;
@@ -814,7 +835,7 @@ function formatNumber(value) {
 }
 
 function ddlTextObject({ zvalue, value, fontSize, l, t, w, h, alignment = 1 }) {
-  return `      <drawobj memory="0" ellipse="false" textlength="0" lock="false" fontsize="${fontSize}" fontfamily="微软雅黑" stretch="100" zvalue="${zvalue}" datasource="0" minute="0" w="${formatNumber(w)}" second="0" addorsub="0" timeformat="0" alignment="${alignment}" h="${formatNumber(h)}" rotate="0" fontbold="false" l="${formatNumber(l)}" fontunderline="false" blackground="false" startposition="0" repeat="1" hormirror="false" fontletterspacing="0" linespacing="0" hour="0" itemtype="5" currentdata="1" year="0" month="0" fontstrikeout="false" dateformat="0" interval="1" fontitalic="false" t="${formatNumber(t)}" day="0">
+  return `      <drawobj memory="0" ellipse="false" textlength="0" lock="false" fontsize="${fontSize}" fontfamily="微软雅黑" stretch="100" zvalue="${zvalue}" datasource="0" minute="0" w="${formatNumber(w)}" second="0" addorsub="0" timeformat="0" alignment="${alignment}" h="${formatNumber(h)}" rotate="0" fontbold="true" l="${formatNumber(l)}" fontunderline="false" blackground="false" startposition="0" repeat="1" hormirror="false" fontletterspacing="0" linespacing="0" hour="0" itemtype="5" currentdata="1" year="0" month="0" fontstrikeout="false" dateformat="0" interval="1" fontitalic="false" t="${formatNumber(t)}" day="0">
         <textlist>
           <text value="${xmlEscape(value)}" promptname="" repeat="1" day="0" addorsub="0" currentdata="1" second="0" interval="1" memory="0" year="0" keyinput="0" datasource="0" dateformat="0" month="0" timeformat="0" hour="0" minute="0"/>
         </textlist>
