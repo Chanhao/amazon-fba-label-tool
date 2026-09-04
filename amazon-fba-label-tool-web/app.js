@@ -149,34 +149,34 @@ const PRODUCT_TEXT_LAYOUTS = [
   {
     titleMaxLines: 1,
     contentsMaxLines: 1,
-    titleBasePt: 3.7,
-    titleMinPt: 2.3,
-    contentsBasePt: 3.9,
-    contentsMinPt: 2.4,
-  },
-  {
-    titleMaxLines: 1,
-    contentsMaxLines: 2,
-    titleBasePt: 3.5,
-    titleMinPt: 2.2,
-    contentsBasePt: 3.5,
-    contentsMinPt: 2.25,
-  },
-  {
-    titleMaxLines: 1,
-    contentsMaxLines: 3,
-    titleBasePt: 3.25,
-    titleMinPt: 2.1,
-    contentsBasePt: 3.15,
-    contentsMinPt: 2.05,
+    titleBasePt: 5.8,
+    titleMinPt: 5.2,
+    contentsBasePt: 5.8,
+    contentsMinPt: 5.2,
   },
   {
     titleMaxLines: 2,
     contentsMaxLines: 2,
-    titleBasePt: 3.2,
-    titleMinPt: 2.05,
-    contentsBasePt: 3.05,
-    contentsMinPt: 2.05,
+    titleBasePt: 4.8,
+    titleMinPt: 4,
+    contentsBasePt: 4.8,
+    contentsMinPt: 4,
+  },
+  {
+    titleMaxLines: 2,
+    contentsMaxLines: 3,
+    titleBasePt: 4.2,
+    titleMinPt: 3.2,
+    contentsBasePt: 4.2,
+    contentsMinPt: 3.2,
+  },
+  {
+    titleMaxLines: 2,
+    contentsMaxLines: 3,
+    titleBasePt: 3.6,
+    titleMinPt: 2.4,
+    contentsBasePt: 3.6,
+    contentsMinPt: 2.4,
   },
 ];
 
@@ -333,7 +333,7 @@ function fitWrappedText(
 }
 
 function lineHeightForFont(fontPt) {
-  return Math.max(1.62, Number((fontPt * 0.57).toFixed(2)));
+  return Math.max(1.62, Number((fontPt * 0.5).toFixed(2)));
 }
 
 function layoutProductText(record) {
