@@ -333,7 +333,7 @@ function fitWrappedText(
 }
 
 function lineHeightForFont(fontPt) {
-  return Math.max(1.62, Number((fontPt * 0.5).toFixed(2)));
+  return Math.max(1.62, Number((fontPt * 0.45).toFixed(2)));
 }
 
 function layoutProductText(record) {
