@@ -149,41 +149,41 @@ const PRODUCT_TEXT_LAYOUTS = [
   {
     titleMaxLines: 1,
     contentsMaxLines: 1,
-    titleBasePt: 5.8,
-    titleMinPt: 5.2,
-    contentsBasePt: 5.8,
-    contentsMinPt: 5.2,
+    titleBasePt: 6,
+    titleMinPt: 5.6,
+    contentsBasePt: 6,
+    contentsMinPt: 5.6,
   },
   {
     titleMaxLines: 2,
     contentsMaxLines: 2,
-    titleBasePt: 4.8,
-    titleMinPt: 4,
-    contentsBasePt: 4.8,
-    contentsMinPt: 4,
+    titleBasePt: 5.2,
+    titleMinPt: 4.8,
+    contentsBasePt: 5.2,
+    contentsMinPt: 4.8,
   },
   {
-    titleMaxLines: 2,
+    titleMaxLines: 3,
+    contentsMaxLines: 2,
+    titleBasePt: 5,
+    titleMinPt: 4.2,
+    contentsBasePt: 5,
+    contentsMinPt: 4.2,
+  },
+  {
+    titleMaxLines: 3,
     contentsMaxLines: 3,
     titleBasePt: 4.2,
-    titleMinPt: 3.2,
+    titleMinPt: 2.8,
     contentsBasePt: 4.2,
-    contentsMinPt: 3.2,
-  },
-  {
-    titleMaxLines: 2,
-    contentsMaxLines: 3,
-    titleBasePt: 3.6,
-    titleMinPt: 2.4,
-    contentsBasePt: 3.6,
-    contentsMinPt: 2.4,
+    contentsMinPt: 2.8,
   },
 ];
 
 const PRODUCT_TEXT_LEFT_MM = 1.5;
-const PRODUCT_TEXT_TOP_MM = 20.15;
+const PRODUCT_TEXT_TOP_MM = 19.05;
 const PRODUCT_TEXT_WIDTH_MM = 57;
-const PRODUCT_TEXT_HEIGHT_MM = 8.65;
+const PRODUCT_TEXT_HEIGHT_MM = 10.75;
 const TEXT_MEASURE_SAFETY = 0.92;
 const PRODUCT_TEXT_WEIGHT = "700";
 
@@ -333,7 +333,7 @@ function fitWrappedText(
 }
 
 function lineHeightForFont(fontPt) {
-  return Math.max(1.62, Number((fontPt * 0.45).toFixed(2)));
+  return Math.max(1.5, Number((fontPt * 0.42).toFixed(2)));
 }
 
 function layoutProductText(record) {
